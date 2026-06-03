@@ -1,0 +1,22 @@
+{
+  "multimedia_items": [
+    {
+      "tipo": "video",
+      "titulo": "Inducción: ¿Cómo usar el Centro de Documentación?",
+      "descripcion": "Un recorrido virtual completo por las instalaciones físicas, el sistema de fichas, el reglamento general de préstamos y los deberes de los usuarios.",
+      "url": "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    },
+    {
+      "tipo": "imagen",
+      "titulo": "Guía Visual: Estructura de Proyectos Académicos",
+      "descripcion": "Infografía detallada que resume los componentes obligatorios de un informe técnico y la organización de los capítulos metodológicos.",
+      "url": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80"
+    },
+    {
+      "tipo": "imagen",
+      "titulo": "Manual Rápido: Aplicación de Citas y Bibliografías",
+      "descripcion": "Resumen gráfico dinámico para aprender a referenciar fuentes impresas y digitales de acuerdo a los estándares exigidos por el instituto.",
+      "url": "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=600&q=80"
+    }
+  ]
+}

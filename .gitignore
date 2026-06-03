@@ -3,6 +3,9 @@
 Thumbs.db
 Desktop.ini
 
+# Dependencias locales del panel de administración
+node_modules/
+
 # Configuraciones de tu editor de código
 .vscode/
 .idea/
