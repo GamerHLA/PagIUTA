@@ -323,6 +323,15 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
         }
 
         /* Estilos específicos para la sección de Sedes dentro del HTML de la BD */
+        .card-body-html img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 12px rgba(11, 37, 69, 0.1);
+            display: block;
+        }
+
         .sedes-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

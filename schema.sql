@@ -25,8 +25,9 @@ INSERT OR IGNORE INTO secciones_informativas (clave, titulo, contenido, fecha_ac
     'identidad',
     'Centro de Documentación e Información "Jesús Rosas Marcano"',
     '<div class="cdi-identidad">
+        <p><img src="uploads/biblioteca_cdi.png" alt="Biblioteca del CDI IUTA" style="width:100%; border-radius:10px;" /></p>
         <p>El <strong>Centro de Documentación e Información "Jesús Rosas Marcano" (CDI)</strong> del Instituto Universitario de Tecnología de Administración Industrial (IUTA) es una unidad estratégica orientada a la gestión, preservación y difusión del conocimiento académico, científico y tecnológico de nuestra comunidad universitaria.</p>
-        <p>Honor al ilustre docente, periodista y poeta venezolano <em>Jesús Rosas Marcano</em>, nuestro centro reafirma su compromiso con la formación integral de los estudiantes, facilitando recursos bibliográficos, digitales y de investigación de alta calidad.</p>
+        <p>En honor al ilustre docente, periodista y poeta venezolano <em>Jesús Rosas Marcano</em>, nuestro centro reafirma su compromiso con la formación integral de los estudiantes, facilitando recursos bibliográficos, digitales y de investigación de alta calidad.</p>
     </div>',
     CURRENT_TIMESTAMP
 );
