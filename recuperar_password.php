@@ -384,7 +384,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'resta
                             placeholder="Escriba su respuesta" autofocus autocomplete="off">
                         <div class="hint-box">
                             <i data-lucide="info" style="width:14px;height:14px;flex-shrink:0;margin-top:1px;"></i>
-                            <span>La respuesta predeterminada es <strong>iuta</strong>. No distingue entre mayúsculas y minúsculas.</span>
+                            <span>No distingue entre mayúsculas y minúsculas.</span>
                         </div>
                     </div>
 
