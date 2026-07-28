@@ -8,16 +8,16 @@
 
 require_once __DIR__ . '/conexion.php';
 
-// Consultar todas las secciones informativas ordenadas por ID
+// Consultar sólo las secciones HABILITADAS (activo = 1) para los usuarios finales
 try {
-    $stmt = $pdo->query("SELECT id, clave, titulo, contenido, fecha_actualizacion FROM secciones_informativas ORDER BY id ASC");
+    $stmt = $pdo->query("SELECT id, clave, titulo, contenido, fecha_actualizacion FROM secciones_informativas WHERE activo = 1 ORDER BY id ASC");
     $secciones = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $secciones = [];
     $error = "Error al conectar o consultar la base de datos: " . $e->getMessage();
 }
 
-// Obtener la clave seleccionada mediante GET (por defecto muestra la primera o 'identidad')
+// Obtener la clave seleccionada mediante GET (por defecto muestra 'todas')
 $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
 ?>
 <!DOCTYPE html>
@@ -28,18 +28,13 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
     <title>CDI "Jesús Rosas Marcano" | Intranet IUTA</title>
     <meta name="description" content="Portal informativo del Centro de Documentación e Información Jesús Rosas Marcano del IUTA.">
     
-    <!-- Fuentes Google: Inter & Merriweather para estilo académico/institucional -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Iconos Lucide CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fuentes locales (sin internet) -->
+    <link rel="stylesheet" href="assets/css/fonts.css">
+
+    <!-- Iconos Lucide (local) -->
+    <script src="assets/js/lucide.min.js"></script>
 
     <style>
-        /* ==========================================================================
-           Variables y Paleta de Colores Azul Marino Institucional (#0b2545)
-           ========================================================================== */
         :root {
             --azul-marino-head: #0b2545;
             --azul-marino-dark: #134074;
@@ -54,17 +49,12 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             --borde-color: #e2e8f0;
             --shadow-sm: 0 1px 3px rgba(11, 37, 69, 0.05);
             --shadow-md: 0 4px 12px rgba(11, 37, 69, 0.08);
-            --shadow-lg: 0 12px 28px rgba(11, 37, 69, 0.12);
             --font-main: 'Inter', system-ui, -apple-system, sans-serif;
             --font-header: 'Merriweather', serif;
             --radius-main: 12px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--font-main);
@@ -76,7 +66,6 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             flex-direction: column;
         }
 
-        /* Top bar de servicios e intranet */
         .top-bar {
             background-color: #07192e;
             color: #94a3b8;
@@ -93,11 +82,7 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             align-items: center;
         }
 
-        .top-bar-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+        .top-bar-left { display: flex; align-items: center; gap: 1rem; }
 
         .tag-intranet {
             background: rgba(0, 102, 204, 0.2);
@@ -107,7 +92,6 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             font-weight: 600;
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         .admin-link {
@@ -128,16 +112,13 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
         .admin-link:hover {
             background-color: var(--azul-intenso);
             color: #ffffff;
-            border-color: var(--azul-intenso);
         }
 
-        /* Encabezado Formal Institucional */
         .header-formal {
             background: linear-gradient(135deg, var(--azul-marino-head) 0%, var(--azul-marino-dark) 100%);
             color: #ffffff;
             padding: 2.5rem 2rem;
             box-shadow: var(--shadow-md);
-            position: relative;
         }
 
         .header-container {
@@ -165,19 +146,13 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             font-family: var(--font-header);
             font-size: 1.75rem;
             font-weight: 700;
-            letter-spacing: -0.01em;
             color: #ffffff;
             margin-bottom: 0.3rem;
         }
 
-        .header-titles p {
-            font-size: 0.95rem;
-            color: #cbd5e1;
-            font-weight: 400;
-        }
+        .header-titles p { font-size: 0.95rem; color: #cbd5e1; }
 
-        /* Bar de navegación / Filtros escaneables */
-        .nav-sections {
+        .nav-sections-wrapper {
             background-color: #ffffff;
             border-bottom: 1px solid var(--borde-color);
             position: sticky;
@@ -186,15 +161,48 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             box-shadow: var(--shadow-sm);
         }
 
-        .nav-container {
+        .nav-sections {
             max-width: 1200px;
             margin: 0 auto;
             display: flex;
+            align-items: center;
+            position: relative;
+            padding: 0 0.5rem;
+        }
+
+        .nav-scroll-btn {
+            background: #ffffff;
+            border: 1px solid var(--borde-color);
+            color: var(--azul-marino-head);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .nav-scroll-btn:hover {
+            background: var(--azul-marino-head);
+            color: #ffffff;
+        }
+
+        .nav-container {
+            display: flex;
             gap: 0.5rem;
             overflow-x: auto;
-            padding: 0 1rem;
+            padding: 0 0.5rem;
             scrollbar-width: none;
+            scroll-behavior: smooth;
+            width: 100%;
         }
+
+        .nav-container::-webkit-scrollbar { display: none; }
 
         .nav-tab {
             padding: 0.9rem 1.25rem;
@@ -208,6 +216,7 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             gap: 0.5rem;
             white-space: nowrap;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
         .nav-tab:hover {
@@ -222,7 +231,6 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             background-color: rgba(238, 244, 248, 0.6);
         }
 
-        /* Contenido Principal */
         .main-container {
             max-width: 1200px;
             margin: 2rem auto;
@@ -231,25 +239,14 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             width: 100%;
         }
 
-        /* Grid Informativo Escaneable */
-        .content-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
+        .content-grid { display: flex; flex-direction: column; gap: 2rem; }
 
-        /* Tarjeta de Sección Informativa */
         .info-card {
             background: var(--bg-card);
             border: 1px solid var(--borde-color);
             border-radius: var(--radius-main);
             padding: 2rem;
             box-shadow: var(--shadow-sm);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .info-card:hover {
-            box-shadow: var(--shadow-md);
         }
 
         .card-header {
@@ -261,21 +258,14 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             margin-bottom: 1.25rem;
         }
 
-        .card-title-group {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
+        .card-title-group { display: flex; align-items: center; gap: 0.75rem; }
 
         .card-icon-box {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             background-color: var(--azul-claro);
             color: var(--azul-marino-head);
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .card-title-group h2 {
@@ -291,45 +281,31 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             background-color: #f1f5f9;
             padding: 0.3rem 0.7rem;
             border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+            display: flex; align-items: center; gap: 0.3rem;
         }
 
-        /* Formateo de Contenido HTML en Base de Datos */
         .card-body-html {
             color: var(--texto-principal);
             font-size: 0.98rem;
             line-height: 1.7;
         }
 
-        .card-body-html p {
-            margin-bottom: 1rem;
-        }
+        .card-body-html p { margin-bottom: 1rem; }
+        .card-body-html strong { color: var(--azul-marino-head); }
+        .card-body-html ul { margin: 1rem 0 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .card-body-html li { color: var(--texto-secundario); }
 
-        .card-body-html strong {
-            color: var(--azul-marino-head);
-        }
-
-        .card-body-html ul {
-            margin: 1rem 0 1.25rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .card-body-html li {
-            color: var(--texto-secundario);
-        }
-
-        /* Estilos específicos para la sección de Sedes dentro del HTML de la BD */
-        .card-body-html img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            margin: 1rem 0;
+        .card-body-html img,
+        .card-body-html video {
+            max-width: 100%; height: auto;
+            border-radius: 10px; margin: 1rem 0;
             box-shadow: 0 4px 12px rgba(11, 37, 69, 0.1);
             display: block;
+        }
+
+        .card-body-html video {
+            background: #000;
+            width: 100%;
         }
 
         .sedes-grid {
@@ -344,31 +320,11 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             border: 1px solid #dce7f1;
             border-radius: 10px;
             padding: 1.25rem;
-            transition: transform 0.2s ease;
         }
 
-        .sede-card:hover {
-            transform: translateY(-3px);
-            background-color: #e5eff7;
-        }
+        .sede-card h3 { font-size: 1.05rem; color: var(--azul-marino-head); margin-bottom: 0.5rem; font-weight: 700; }
+        .sede-card p { font-size: 0.88rem; color: var(--texto-secundario); margin-bottom: 0.4rem; }
 
-        .sede-card h3 {
-            font-size: 1.05rem;
-            color: var(--azul-marino-head);
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .sede-card p {
-            font-size: 0.88rem;
-            color: var(--texto-secundario);
-            margin-bottom: 0.4rem;
-        }
-
-        /* Mensaje de alerta en caso de error */
         .alert-error {
             background-color: #fef2f2;
             border: 1px solid #fecaca;
@@ -376,12 +332,9 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             padding: 1rem 1.5rem;
             border-radius: 8px;
             margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            display: flex; align-items: center; gap: 0.75rem;
         }
 
-        /* Pie de Página Formal */
         .footer-formal {
             background-color: var(--azul-marino-head);
             color: #cbd5e1;
@@ -401,49 +354,21 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             font-size: 0.88rem;
         }
 
-        .footer-left p {
-            margin-bottom: 0.25rem;
-        }
+        .footer-left p { margin-bottom: 0.25rem; }
 
-        .footer-nav {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
+        .footer-nav { display: flex; gap: 1rem; align-items: center; }
+        .footer-nav a { color: #94a3b8; text-decoration: none; }
+        .footer-nav a:hover { color: #ffffff; }
 
-        .footer-nav a {
-            color: #94a3b8;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .footer-nav a:hover {
-            color: #ffffff;
-        }
-
-        /* Media Queries para Responsive */
         @media (max-width: 768px) {
-            .header-container {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-
-            .footer-container {
-                flex-direction: column;
-                text-align: center;
-            }
+            .header-container { flex-direction: column; text-align: center; }
+            .card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .footer-container { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Bar superior institucional e intranet -->
     <div class="top-bar">
         <div class="top-bar-container">
             <div class="top-bar-left">
@@ -451,7 +376,6 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
                 <span>Instituto Universitario de Tecnología de Administración Industrial</span>
             </div>
             <div>
-                <!-- Enlace al panel de administración -->
                 <a href="admin.php" class="admin-link" title="Acceso exclusivo para administradores">
                     <i data-lucide="lock" style="width: 14px; height: 14px;"></i>
                     <span>Acceso Administrativo</span>
@@ -460,7 +384,6 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
         </div>
     </div>
 
-    <!-- Encabezado Formal -->
     <header class="header-formal">
         <div class="header-container">
             <div class="header-logo">
@@ -473,35 +396,43 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
         </div>
     </header>
 
-    <!-- Navegación por pestañas de secciones -->
-    <nav class="nav-sections">
-        <div class="nav-container">
-            <a href="index.php?sec=todas" class="nav-tab <?= $claveSeleccionada === 'todas' ? 'active' : '' ?>">
-                <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
-                <span>Ver Todo</span>
-            </a>
-            <?php 
-            $iconosMapa = [
-                'identidad' => 'info',
-                'mision' => 'target',
-                'vision' => 'compass',
-                'valores' => 'shield-check',
-                'sedes' => 'map-pin'
-            ];
+    <div class="nav-sections-wrapper">
+        <nav class="nav-sections">
+            <button class="nav-scroll-btn" id="scrollLeft" title="Desplazar a la izquierda">
+                <i data-lucide="chevron-left" style="width: 20px; height: 20px;"></i>
+            </button>
 
-            foreach ($secciones as $sec): 
-                $icono = isset($iconosMapa[$sec['clave']]) ? $iconosMapa[$sec['clave']] : 'file-text';
-                $esActivo = ($claveSeleccionada === $sec['clave']);
-            ?>
-                <a href="index.php?sec=<?= urlencode($sec['clave']) ?>" class="nav-tab <?= $esActivo ? 'active' : '' ?>">
-                    <i data-lucide="<?= $icono ?>" style="width: 16px; height: 16px;"></i>
-                    <span><?= htmlspecialchars($sec['titulo']) ?></span>
+            <div class="nav-container" id="navContainer">
+                <a href="index.php?sec=todas" class="nav-tab <?= $claveSeleccionada === 'todas' ? 'active' : '' ?>">
+                    <i data-lucide="layers" style="width: 16px; height: 16px;"></i>
+                    <span>Ver Todo</span>
                 </a>
-            <?php endforeach; ?>
-        </div>
-    </nav>
+                <?php 
+                $iconosMapa = [
+                    'identidad' => 'info',
+                    'mision' => 'target',
+                    'vision' => 'compass',
+                    'valores' => 'shield-check',
+                    'sedes' => 'map-pin'
+                ];
 
-    <!-- Área de Contenido Principal -->
+                foreach ($secciones as $sec): 
+                    $icono = isset($iconosMapa[$sec['clave']]) ? $iconosMapa[$sec['clave']] : 'file-text';
+                    $esActivo = ($claveSeleccionada === $sec['clave']);
+                ?>
+                    <a href="index.php?sec=<?= urlencode($sec['clave']) ?>" class="nav-tab <?= $esActivo ? 'active' : '' ?>">
+                        <i data-lucide="<?= $icono ?>" style="width: 16px; height: 16px;"></i>
+                        <span><?= htmlspecialchars($sec['titulo']) ?></span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+
+            <button class="nav-scroll-btn" id="scrollRight" title="Desplazar a la derecha">
+                <i data-lucide="chevron-right" style="width: 20px; height: 20px;"></i>
+            </button>
+        </nav>
+    </div>
+
     <main class="main-container">
 
         <?php if (isset($error)): ?>
@@ -530,7 +461,7 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
             ?>
                 <div class="info-card" style="text-align: center; padding: 3rem;">
                     <i data-lucide="file-question" style="width: 48px; height: 48px; color: var(--texto-suave); margin-bottom: 1rem;"></i>
-                    <p style="color: var(--texto-secundario);">No se encontró información para la sección seleccionada.</p>
+                    <p style="color: var(--texto-secundario);">No se encontró información activa para la sección seleccionada.</p>
                 </div>
             <?php 
             else:
@@ -545,13 +476,12 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
                             </div>
                             <h2><?= htmlspecialchars($sec['titulo']) ?></h2>
                         </div>
-                        <div class="date-badge" title="Última fecha de actualización en base de datos">
+                        <div class="date-badge" title="Última fecha de actualización">
                             <i data-lucide="calendar" style="width: 13px; height: 13px;"></i>
                             <span><?= date('d/m/Y', strtotime($sec['fecha_actualizacion'])) ?></span>
                         </div>
                     </header>
                     
-                    <!-- Renderizado seguro de contenido HTML almacenado en la BD -->
                     <div class="card-body-html">
                         <?= $sec['contenido'] ?>
                     </div>
@@ -563,7 +493,6 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
         </div>
     </main>
 
-    <!-- Pie de Página Institucional -->
     <footer class="footer-formal">
         <div class="footer-container">
             <div class="footer-left">
@@ -578,9 +507,22 @@ $claveSeleccionada = isset($_GET['sec']) ? trim($_GET['sec']) : 'todas';
         </div>
     </footer>
 
-    <!-- Inicialización de Iconos Lucide -->
     <script>
         lucide.createIcons();
+
+        const navContainer = document.getElementById('navContainer');
+        const btnLeft = document.getElementById('scrollLeft');
+        const btnRight = document.getElementById('scrollRight');
+
+        if (navContainer && btnLeft && btnRight) {
+            btnLeft.addEventListener('click', () => {
+                navContainer.scrollBy({ left: -250, behavior: 'smooth' });
+            });
+
+            btnRight.addEventListener('click', () => {
+                navContainer.scrollBy({ left: 250, behavior: 'smooth' });
+            });
+        }
     </script>
 </body>
 </html>

@@ -7,6 +7,7 @@
  */
 
 session_start();
+require_once __DIR__ . '/conexion.php';
 
 // Si el usuario ya está autenticado, redirigir directamente al panel admin
 if (isset($_SESSION['admin']) && $_SESSION['admin'] === true) {
@@ -14,25 +15,39 @@ if (isset($_SESSION['admin']) && $_SESSION['admin'] === true) {
     exit;
 }
 
-// Definición de credenciales administrativas por defecto
-define('ADMIN_USER', 'admin');
-define('ADMIN_PASS', 'iuta2026'); // Puede cambiarse según las necesidades de la institución
-
 $error = '';
 
-// Procesar el formulario cuando se envía por POST
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $usuario = isset($_POST['usuario']) ? trim($_POST['usuario']) : '';
     $password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
-    if ($usuario === ADMIN_USER && $password === ADMIN_PASS) {
-        // Credenciales correctas: Iniciar sesión y redirigir a admin.php
-        $_SESSION['admin'] = true;
-        $_SESSION['usuario'] = $usuario;
-        header('Location: admin.php');
-        exit;
+    if (!empty($usuario) && !empty($password)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, usuario, password_hash FROM usuarios WHERE usuario = :user");
+            $stmt->execute([':user' => $usuario]);
+            $userFound = $stmt->fetch();
+
+            // Verificar si el usuario existe y la contraseña coincide (o fallback para credenciales por defecto)
+            $autenticado = false;
+            if ($userFound && password_verify($password, $userFound['password_hash'])) {
+                $autenticado = true;
+            } elseif ($usuario === 'admin' && $password === 'iuta2026') {
+                $autenticado = true;
+            }
+
+            if ($autenticado) {
+                $_SESSION['admin'] = true;
+                $_SESSION['usuario'] = $usuario;
+                header('Location: admin.php');
+                exit;
+            } else {
+                $error = 'Usuario o contraseña incorrectos. Por favor intente nuevamente.';
+            }
+        } catch (PDOException $e) {
+            $error = 'Error en la base de datos: ' . $e->getMessage();
+        }
     } else {
-        $error = 'Usuario o contraseña incorrectos. Por favor intente nuevamente.';
+        $error = 'Por favor complete todos los campos.';
     }
 }
 ?>
@@ -44,13 +59,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     <title>Iniciar Sesión | CDI IUTA Intranet</title>
     <meta name="description" content="Acceso al Panel Administrativo del CDI Jesús Rosas Marcano">
     
-    <!-- Fuentes Google -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Iconos Lucide CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fuentes locales (sin internet) -->
+    <link rel="stylesheet" href="assets/css/fonts.css">
+
+    <!-- Iconos Lucide (local) -->
+    <script src="assets/js/lucide.min.js"></script>
 
     <style>
         :root {
@@ -184,6 +197,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
         }
 
+        .forgot-link-box {
+            text-align: right;
+            margin-top: 0.35rem;
+        }
+
+        .forgot-link {
+            font-size: 0.82rem;
+            color: var(--azul-intenso);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
         .btn-submit {
             width: 100%;
             background-color: var(--azul-marino-head);
@@ -199,7 +228,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             justify-content: center;
             gap: 0.5rem;
             transition: background 0.2s;
-            margin-top: 1.5rem;
+            margin-top: 1.25rem;
         }
 
         .btn-submit:hover {
@@ -261,6 +290,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     <div class="input-wrapper">
                         <i data-lucide="key-round" class="input-icon" style="width: 18px; height: 18px;"></i>
                         <input type="password" name="password" id="password" class="form-input" required placeholder="Contraseña de acceso">
+                    </div>
+                    <div class="forgot-link-box">
+                        <!-- Enlace para restablecer contraseña por olvido -->
+                        <a href="recuperar_password.php" class="forgot-link">¿Olvidó su contraseña?</a>
                     </div>
                 </div>
 
