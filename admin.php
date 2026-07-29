@@ -961,7 +961,8 @@ if (file_exists($dirUploads)) {
         selector: '#contenido',
         height: 440,
         language: 'es',
-        base_url: '/PagIUTA-1/assets/tinymce',
+        // Ruta relativa al paquete TinyMCE dentro de este proyecto
+        base_url: 'assets/tinymce',
         suffix: '.min',
         plugins: 'advlist autolink lists link image media charmap preview anchor visualblocks code fullscreen table wordcount',
         toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media table | removeformat code preview fullscreen',
